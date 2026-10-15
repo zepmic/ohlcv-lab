@@ -19,4 +19,3 @@ python -m pytest -q
 
 - `src/ohlcv_lab/` – Paketcode (src-Layout)
 - `tests/` – pytest-Tests
-- `ROADMAP.md` – geplante Schritte
