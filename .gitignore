@@ -8,3 +8,4 @@ __pycache__/
 data/
 .commit_msg
 .env
+.DS_Store
