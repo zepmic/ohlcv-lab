@@ -1,5 +1,5 @@
-import crypto_pulse
+import ohlcv_lab
 
 
 def test_version():
-    assert crypto_pulse.__version__
+    assert ohlcv_lab.__version__

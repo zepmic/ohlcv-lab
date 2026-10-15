@@ -1,5 +1,5 @@
 [project]
-name = "crypto-pulse"
+name = "ohlcv-lab"
 version = "0.0.1"
 description = "Crypto market data pipeline with indicators and a dashboard"
 requires-python = ">=3.11"
