@@ -6,6 +6,5 @@ __pycache__/
 .ruff_cache/
 *.egg-info/
 data/
-.commit_msg
 .env
 .DS_Store
