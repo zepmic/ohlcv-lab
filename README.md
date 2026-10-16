@@ -1,7 +1,10 @@
 # ohlcv-lab
 
-Krypto-Marktdaten holen, speichern, Indikatoren berechnen, im Dashboard anzeigen.
-Nur Analyse und Backtesting-Daten – kein Trading, keine Orders, keine API-Keys mit Handelsrechten.
+A small Python toolkit for crypto OHLCV data. The plan is to pull candles from public exchange APIs, store them locally, compute indicators on them, and browse the result in a dashboard.
+
+It only deals with analysis and backtesting data. There is no trading code, and it never needs an API key with trading rights.
+
+The project is at an early stage. So far there is the package skeleton and a config module.
 
 ## Setup
 
@@ -15,7 +18,7 @@ pip install -e ".[dev]"
 python -m pytest -q
 ```
 
-## Struktur
+## Layout
 
-- `src/ohlcv_lab/` – Paketcode (src-Layout)
-- `tests/` – pytest-Tests
+- `src/ohlcv_lab/` holds the package code (src layout)
+- `tests/` holds the pytest tests
