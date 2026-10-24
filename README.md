@@ -4,7 +4,7 @@ A small Python toolkit for crypto OHLCV data. The plan is to pull candles from p
 
 It only deals with analysis and backtesting data. There is no trading code, and it never needs an API key with trading rights.
 
-The project is at an early stage. So far there is the package skeleton, a config module, a logging setup, and the `Candle` data model.
+The project is at an early stage. So far there is the package skeleton, a config module, a logging setup, the `Candle` data model, and an HTTP client wrapper.
 
 ## Setup
 
@@ -30,3 +30,7 @@ Call `configure_logging()` from `ohlcv_lab.logging_setup` to set up a unified lo
 ## Data model
 
 `Candle` in `ohlcv_lab.models` represents a single OHLCV candle (timestamp, open, high, low, close, volume). It validates its values on creation and raises `ValueError` for negative or inconsistent data, for example when `high` is below `low` or a price is not positive.
+
+## HTTP client
+
+`ohlcv_lab.http_client` wraps `requests` for GET requests. `build_session()` returns a `requests.Session` that retries failed requests with exponential backoff on connection errors and on `429`/`5xx` responses. `get(url)` uses such a session with a default timeout of 10 seconds and raises for HTTP error status codes.
