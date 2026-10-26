@@ -1,4 +1,4 @@
-"""Konfiguration für Symbole, Intervall und Datenpfad."""
+"""Configuration for symbols, interval and data path."""
 
 from dataclasses import dataclass
 
@@ -9,7 +9,7 @@ DEFAULT_DATA_PATH = "data"
 
 @dataclass
 class Config:
-    """Laufzeiteinstellungen für das Abrufen und Speichern von OHLCV-Daten."""
+    """Runtime settings for fetching and storing OHLCV data."""
 
     symbols: tuple[str, ...] = DEFAULT_SYMBOLS
     interval: str = DEFAULT_INTERVAL

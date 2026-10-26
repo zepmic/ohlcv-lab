@@ -30,6 +30,17 @@ def build_session(
     return session
 
 
+_session: requests.Session | None = None
+
+
+def _default_session() -> requests.Session:
+    """Create the shared session on first use so calls reuse connections."""
+    global _session
+    if _session is None:
+        _session = build_session()
+    return _session
+
+
 def get(
     url: str,
     session: requests.Session | None = None,
@@ -38,9 +49,9 @@ def get(
 ) -> requests.Response:
     """Send a GET request with a default timeout and raise for HTTP error status.
 
-    Uses a one-off retrying session if none is given.
+    Uses a shared retrying session if none is given.
     """
-    session = session or build_session()
+    session = session or _default_session()
     response = session.get(url, timeout=timeout, **kwargs)
     response.raise_for_status()
     return response

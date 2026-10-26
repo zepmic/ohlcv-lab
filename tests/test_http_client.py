@@ -67,7 +67,8 @@ def test_get_raises_on_http_error():
         get("https://example.com", session=mock_session)
 
 
-def test_get_builds_session_when_none_given():
+def test_get_builds_session_when_none_given(monkeypatch):
+    monkeypatch.setattr("ohlcv_lab.http_client._session", None)
     mock_response = MagicMock()
     mock_session = MagicMock()
     mock_session.get.return_value = mock_response
@@ -78,6 +79,18 @@ def test_get_builds_session_when_none_given():
     mock_build.assert_called_once_with()
     mock_session.get.assert_called_once_with("https://example.com", timeout=DEFAULT_TIMEOUT)
     assert result is mock_response
+
+
+def test_get_reuses_default_session(monkeypatch):
+    monkeypatch.setattr("ohlcv_lab.http_client._session", None)
+    mock_session = MagicMock()
+
+    with patch("ohlcv_lab.http_client.build_session", return_value=mock_session) as mock_build:
+        get("https://example.com/a")
+        get("https://example.com/b")
+
+    mock_build.assert_called_once_with()
+    assert mock_session.get.call_count == 2
 
 
 def test_get_raises_http_error_after_retries_are_exhausted():
