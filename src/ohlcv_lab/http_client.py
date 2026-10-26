@@ -20,6 +20,8 @@ def build_session(
         backoff_factor=backoff_factor,
         status_forcelist=RETRY_STATUS_CODES,
         allowed_methods=("GET",),
+        # Return the last response once retries run out, so get() raises HTTPError, not RetryError.
+        raise_on_status=False,
     )
     adapter = HTTPAdapter(max_retries=retry)
     session = requests.Session()

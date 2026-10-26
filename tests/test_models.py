@@ -25,6 +25,15 @@ def test_rejects_non_positive_price(field):
         Candle(timestamp=0, volume=0.0, **values)
 
 
+@pytest.mark.parametrize("bad", [float("nan"), float("inf"), float("-inf")])
+@pytest.mark.parametrize("field", ["open", "high", "low", "close", "volume"])
+def test_rejects_non_finite_values(field, bad):
+    values = {"open": 1.0, "high": 1.0, "low": 1.0, "close": 1.0, "volume": 1.0}
+    values[field] = bad
+    with pytest.raises(ValueError):
+        Candle(timestamp=0, **values)
+
+
 def test_rejects_negative_volume():
     with pytest.raises(ValueError):
         Candle(timestamp=0, open=1.0, high=1.0, low=1.0, close=1.0, volume=-1.0)

@@ -1,3 +1,5 @@
+import http.server
+import threading
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -24,6 +26,7 @@ def test_build_session_configures_retry_and_backoff():
     assert retry.backoff_factor == 1.5
     assert set(retry.status_forcelist) == set(RETRY_STATUS_CODES)
     assert set(retry.allowed_methods) == {"GET"}
+    assert retry.raise_on_status is False
 
 
 def test_build_session_uses_defaults():
@@ -75,3 +78,23 @@ def test_get_builds_session_when_none_given():
     mock_build.assert_called_once_with()
     mock_session.get.assert_called_once_with("https://example.com", timeout=DEFAULT_TIMEOUT)
     assert result is mock_response
+
+
+def test_get_raises_http_error_after_retries_are_exhausted():
+    class AlwaysUnavailable(http.server.BaseHTTPRequestHandler):
+        def do_GET(self):
+            self.send_response(503)
+            self.end_headers()
+
+        def log_message(self, *args):
+            pass
+
+    server = http.server.HTTPServer(("127.0.0.1", 0), AlwaysUnavailable)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    try:
+        session = build_session(retries=1, backoff_factor=0)
+        with pytest.raises(requests.HTTPError):
+            get(f"http://127.0.0.1:{server.server_port}/", session=session)
+    finally:
+        server.shutdown()
+        server.server_close()
