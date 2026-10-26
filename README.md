@@ -34,3 +34,9 @@ Call `configure_logging()` from `ohlcv_lab.logging_setup` to set up a unified lo
 ## HTTP client
 
 `ohlcv_lab.http_client` wraps `requests` for GET requests. `build_session()` returns a `requests.Session` that retries failed requests with exponential backoff on connection errors and on `429`/`5xx` responses. `get(url)` uses such a session with a default timeout of 10 seconds and raises for HTTP error status codes.
+
+## Binance klines
+
+`ohlcv_lab.binance` fetches candles from the public Binance klines endpoint. `fetch_klines(symbol, interval, limit=500)` returns up to `limit` candles and accepts optional `start_time`/`end_time` bounds in milliseconds since the epoch.
+
+Binance caps a single response at 1000 candles, so a longer time range needs more than one request. `fetch_klines_range(symbol, interval, start_time, end_time)` covers this by paginating automatically, starting each new request right after the last candle of the previous one until `end_time` is reached.
