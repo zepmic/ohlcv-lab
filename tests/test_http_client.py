@@ -111,3 +111,33 @@ def test_get_raises_http_error_after_retries_are_exhausted():
     finally:
         server.shutdown()
         server.server_close()
+
+
+def test_get_retries_on_rate_limit_ban_and_respects_retry_after():
+    request_count = 0
+
+    class BannedThenOk(http.server.BaseHTTPRequestHandler):
+        def do_GET(self):
+            nonlocal request_count
+            request_count += 1
+            if request_count == 1:
+                self.send_response(418)
+                self.send_header("Retry-After", "0")
+                self.end_headers()
+            else:
+                self.send_response(200)
+                self.end_headers()
+
+        def log_message(self, *args):
+            pass
+
+    server = http.server.HTTPServer(("127.0.0.1", 0), BannedThenOk)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    try:
+        session = build_session(retries=1, backoff_factor=0)
+        response = get(f"http://127.0.0.1:{server.server_port}/", session=session)
+        assert response.status_code == 200
+        assert request_count == 2
+    finally:
+        server.shutdown()
+        server.server_close()

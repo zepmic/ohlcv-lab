@@ -7,7 +7,9 @@ from urllib3.util.retry import Retry
 DEFAULT_TIMEOUT = 10
 DEFAULT_RETRIES = 3
 DEFAULT_BACKOFF_FACTOR = 0.5
-RETRY_STATUS_CODES = (429, 500, 502, 503, 504)
+# 418 is used by some exchanges (e.g. Binance) to signal a temporary IP ban
+# after repeated rate limit violations, alongside a Retry-After header.
+RETRY_STATUS_CODES = (418, 429, 500, 502, 503, 504)
 
 
 def build_session(

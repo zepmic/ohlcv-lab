@@ -33,7 +33,7 @@ Call `configure_logging()` from `ohlcv_lab.logging_setup` to set up a unified lo
 
 ## HTTP client
 
-`ohlcv_lab.http_client` wraps `requests` for GET requests. `build_session()` returns a `requests.Session` that retries failed requests with exponential backoff on connection errors and on `429`/`5xx` responses. `get(url)` uses such a session with a default timeout of 10 seconds and raises for HTTP error status codes.
+`ohlcv_lab.http_client` wraps `requests` for GET requests. `build_session()` returns a `requests.Session` that retries failed requests with exponential backoff on connection errors and on `418`/`429`/`5xx` responses, and honors a `Retry-After` header when the server sends one. `get(url)` uses such a session with a default timeout of 10 seconds and raises for HTTP error status codes.
 
 ## Binance klines
 
