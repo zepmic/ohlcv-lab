@@ -3,7 +3,14 @@ from unittest.mock import MagicMock
 import pytest
 import requests
 
-from ohlcv_lab.binance import KLINES_URL, MAX_LIMIT, fetch_klines, fetch_klines_range
+from ohlcv_lab.binance import (
+    KLINES_URL,
+    MAX_LIMIT,
+    PRICE_URL,
+    fetch_klines,
+    fetch_klines_range,
+    fetch_price,
+)
 from ohlcv_lab.models import Candle
 
 ONE_HOUR_MS = 60 * 60 * 1000
@@ -138,3 +145,35 @@ def test_fetch_klines_range_returns_empty_list_for_no_data():
 def test_fetch_klines_range_rejects_unsupported_interval():
     with pytest.raises(ValueError):
         fetch_klines_range("BTC/USDT", "1M", 0, 1)
+
+
+def test_fetch_price_returns_parsed_price():
+    session = MagicMock()
+    response = MagicMock()
+    response.json.return_value = {"symbol": "BTCUSDT", "price": "42000.50"}
+    session.get.return_value = response
+
+    assert fetch_price("BTC/USDT", session=session) == 42000.50
+
+
+def test_fetch_price_requests_expected_params():
+    session = MagicMock()
+    response = MagicMock()
+    response.json.return_value = {"symbol": "BTCUSDT", "price": "1"}
+    session.get.return_value = response
+
+    fetch_price("BTC/USDT", session=session)
+
+    args, kwargs = session.get.call_args
+    assert args[0] == PRICE_URL
+    assert kwargs["params"] == {"symbol": "BTCUSDT"}
+
+
+def test_fetch_price_raises_on_http_error():
+    session = MagicMock()
+    response = MagicMock()
+    response.raise_for_status.side_effect = requests.HTTPError("boom")
+    session.get.return_value = response
+
+    with pytest.raises(requests.HTTPError):
+        fetch_price("BTC/USDT", session=session)

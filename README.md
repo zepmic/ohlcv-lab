@@ -40,3 +40,11 @@ Call `configure_logging()` from `ohlcv_lab.logging_setup` to set up a unified lo
 `ohlcv_lab.binance` fetches candles from the public Binance klines endpoint. `fetch_klines(symbol, interval, limit=500)` returns up to `limit` candles and accepts optional `start_time`/`end_time` bounds in milliseconds since the epoch.
 
 Binance caps a single response at 1000 candles, so a longer time range needs more than one request. `fetch_klines_range(symbol, interval, start_time, end_time)` covers this by paginating automatically, starting each new request right after the last candle of the previous one until `end_time` is reached.
+
+`fetch_price(symbol)` fetches the current price for a symbol from the Binance ticker endpoint.
+
+## Price providers
+
+`ohlcv_lab.providers.PriceProvider` describes the shared interface for fetching the current price of a symbol. `ohlcv_lab.binance.fetch_price` and `ohlcv_lab.coingecko.fetch_price` both implement it, so either can be used as the price source for a given symbol.
+
+`ohlcv_lab.coingecko` fetches prices from the public CoinGecko simple price endpoint. `fetch_price(symbol)` accepts a "BASE/QUOTE" symbol such as `"BTC/USD"`, defaults the quote currency to USD when omitted, and translates the base currency to the CoinGecko coin id it expects.

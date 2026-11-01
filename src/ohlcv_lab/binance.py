@@ -6,6 +6,7 @@ from ohlcv_lab.http_client import get
 from ohlcv_lab.models import Candle
 
 KLINES_URL = "https://api.binance.com/api/v3/klines"
+PRICE_URL = "https://api.binance.com/api/v3/ticker/price"
 MAX_LIMIT = 1000
 
 INTERVAL_MS = {
@@ -80,6 +81,13 @@ def fetch_klines_range(
         if len(batch) < MAX_LIMIT:
             break
     return candles
+
+
+def fetch_price(symbol: str, session: requests.Session | None = None) -> float:
+    """Fetch the current price for a symbol."""
+    params = {"symbol": _to_binance_symbol(symbol)}
+    response = get(PRICE_URL, session=session, params=params)
+    return float(response.json()["price"])
 
 
 def _interval_to_ms(interval: str) -> int:
