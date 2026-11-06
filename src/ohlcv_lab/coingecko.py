@@ -2,6 +2,7 @@
 
 import requests
 
+from ohlcv_lab.exceptions import NoPriceDataError, UnsupportedSymbolError
 from ohlcv_lab.http_client import get
 
 PRICE_URL = "https://api.coingecko.com/api/v3/simple/price"
@@ -28,7 +29,7 @@ def fetch_price(symbol: str, session: requests.Session | None = None) -> float:
     try:
         return float(data[coin_id][vs_currency])
     except KeyError:
-        raise ValueError(f"no price data for {symbol!r}") from None
+        raise NoPriceDataError(f"no price data for {symbol!r}") from None
 
 
 def _to_coin_id(base: str) -> str:
@@ -36,4 +37,4 @@ def _to_coin_id(base: str) -> str:
     try:
         return COIN_IDS[base.upper()]
     except KeyError:
-        raise ValueError(f"unsupported symbol for CoinGecko: {base!r}") from None
+        raise UnsupportedSymbolError(f"unsupported symbol for CoinGecko: {base!r}") from None

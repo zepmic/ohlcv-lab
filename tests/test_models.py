@@ -1,5 +1,6 @@
 import pytest
 
+from ohlcv_lab.exceptions import InvalidCandleError
 from ohlcv_lab.models import Candle
 
 
@@ -13,7 +14,7 @@ def test_valid_candle():
 
 
 def test_rejects_negative_timestamp():
-    with pytest.raises(ValueError):
+    with pytest.raises(InvalidCandleError):
         Candle(timestamp=-1, open=1.0, high=1.0, low=1.0, close=1.0, volume=0.0)
 
 
@@ -21,7 +22,7 @@ def test_rejects_negative_timestamp():
 def test_rejects_non_positive_price(field):
     values = {"open": 1.0, "high": 1.0, "low": 1.0, "close": 1.0}
     values[field] = 0.0
-    with pytest.raises(ValueError):
+    with pytest.raises(InvalidCandleError):
         Candle(timestamp=0, volume=0.0, **values)
 
 
@@ -30,25 +31,25 @@ def test_rejects_non_positive_price(field):
 def test_rejects_non_finite_values(field, bad):
     values = {"open": 1.0, "high": 1.0, "low": 1.0, "close": 1.0, "volume": 1.0}
     values[field] = bad
-    with pytest.raises(ValueError):
+    with pytest.raises(InvalidCandleError):
         Candle(timestamp=0, **values)
 
 
 def test_rejects_negative_volume():
-    with pytest.raises(ValueError):
+    with pytest.raises(InvalidCandleError):
         Candle(timestamp=0, open=1.0, high=1.0, low=1.0, close=1.0, volume=-1.0)
 
 
 def test_rejects_high_below_low():
-    with pytest.raises(ValueError):
+    with pytest.raises(InvalidCandleError):
         Candle(timestamp=0, open=5.0, high=4.0, low=6.0, close=5.0, volume=0.0)
 
 
 def test_rejects_high_below_open_or_close():
-    with pytest.raises(ValueError):
+    with pytest.raises(InvalidCandleError):
         Candle(timestamp=0, open=10.0, high=9.0, low=1.0, close=5.0, volume=0.0)
 
 
 def test_rejects_low_above_open_or_close():
-    with pytest.raises(ValueError):
+    with pytest.raises(InvalidCandleError):
         Candle(timestamp=0, open=1.0, high=10.0, low=2.0, close=5.0, volume=0.0)

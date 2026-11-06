@@ -2,6 +2,7 @@
 
 import requests
 
+from ohlcv_lab.exceptions import UnsupportedIntervalError
 from ohlcv_lab.http_client import get
 from ohlcv_lab.models import Candle
 
@@ -95,7 +96,9 @@ def _interval_to_ms(interval: str) -> int:
     try:
         return INTERVAL_MS[interval]
     except KeyError:
-        raise ValueError(f"unsupported interval for pagination: {interval!r}") from None
+        raise UnsupportedIntervalError(
+            f"unsupported interval for pagination: {interval!r}"
+        ) from None
 
 
 def _to_binance_symbol(symbol: str) -> str:

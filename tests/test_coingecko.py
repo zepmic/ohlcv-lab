@@ -4,6 +4,7 @@ import pytest
 import requests
 
 from ohlcv_lab.coingecko import PRICE_URL, fetch_price
+from ohlcv_lab.exceptions import NoPriceDataError, UnsupportedSymbolError
 
 
 def _session_returning(data):
@@ -39,14 +40,14 @@ def test_fetch_price_requests_expected_params():
 def test_fetch_price_rejects_unsupported_symbol():
     session = _session_returning({})
 
-    with pytest.raises(ValueError):
+    with pytest.raises(UnsupportedSymbolError):
         fetch_price("DOGE/USD", session=session)
 
 
 def test_fetch_price_raises_when_response_has_no_price_data():
     session = _session_returning({})
 
-    with pytest.raises(ValueError):
+    with pytest.raises(NoPriceDataError):
         fetch_price("BTC/USD", session=session)
 
 

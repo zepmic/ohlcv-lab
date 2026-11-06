@@ -29,7 +29,7 @@ Call `configure_logging()` from `ohlcv_lab.logging_setup` to set up a unified lo
 
 ## Data model
 
-`Candle` in `ohlcv_lab.models` represents a single OHLCV candle (timestamp, open, high, low, close, volume). It validates its values on creation and raises `ValueError` for negative or inconsistent data, for example when `high` is below `low` or a price is not positive.
+`Candle` in `ohlcv_lab.models` represents a single OHLCV candle (timestamp, open, high, low, close, volume). It validates its values on creation and raises `InvalidCandleError` for negative or inconsistent data, for example when `high` is below `low` or a price is not positive.
 
 ## HTTP client
 
@@ -48,3 +48,7 @@ Binance caps a single response at 1000 candles, so a longer time range needs mor
 `ohlcv_lab.providers.PriceProvider` describes the shared interface for fetching the current price of a symbol. `ohlcv_lab.binance.fetch_price` and `ohlcv_lab.coingecko.fetch_price` both implement it, so either can be used as the price source for a given symbol.
 
 `ohlcv_lab.coingecko` fetches prices from the public CoinGecko simple price endpoint. `fetch_price(symbol)` accepts a "BASE/QUOTE" symbol such as `"BTC/USD"`, defaults the quote currency to USD when omitted, and translates the base currency to the CoinGecko coin id it expects.
+
+## Exceptions
+
+`ohlcv_lab.exceptions` defines the custom exception types raised across the package. `OhlcvLabError` is the common base class. `InvalidCandleError` is raised by `Candle` for invalid data, `UnsupportedSymbolError` and `UnsupportedIntervalError` are raised by the Binance and CoinGecko clients for symbols or intervals they do not recognize, and `NoPriceDataError` is raised when a provider's response does not contain the requested price. Each of these also subclasses `ValueError`, so existing code that catches `ValueError` keeps working.

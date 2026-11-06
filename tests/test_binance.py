@@ -11,6 +11,7 @@ from ohlcv_lab.binance import (
     fetch_klines_range,
     fetch_price,
 )
+from ohlcv_lab.exceptions import UnsupportedIntervalError
 from ohlcv_lab.models import Candle
 
 ONE_HOUR_MS = 60 * 60 * 1000
@@ -143,7 +144,7 @@ def test_fetch_klines_range_returns_empty_list_for_no_data():
 
 
 def test_fetch_klines_range_rejects_unsupported_interval():
-    with pytest.raises(ValueError):
+    with pytest.raises(UnsupportedIntervalError):
         fetch_klines_range("BTC/USDT", "1M", 0, 1)
 
 
