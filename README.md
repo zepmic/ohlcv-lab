@@ -4,7 +4,7 @@ A small Python toolkit for crypto OHLCV data. The plan is to pull candles from p
 
 It only deals with analysis and backtesting data. There is no trading code, and it never needs an API key with trading rights.
 
-The project is at an early stage. So far there is the package skeleton, a config module, a logging setup, the `Candle` data model, and an HTTP client wrapper.
+The project is at an early stage. So far there is the package skeleton, a config module, a logging setup, the `Candle` data model, an HTTP client wrapper, and SQLite storage for candles.
 
 ## Setup
 
@@ -48,6 +48,10 @@ Binance caps a single response at 1000 candles, so a longer time range needs mor
 `ohlcv_lab.providers.PriceProvider` describes the shared interface for fetching the current price of a symbol. `ohlcv_lab.binance.fetch_price` and `ohlcv_lab.coingecko.fetch_price` both implement it, so either can be used as the price source for a given symbol.
 
 `ohlcv_lab.coingecko` fetches prices from the public CoinGecko simple price endpoint. `fetch_price(symbol)` accepts a "BASE/QUOTE" symbol such as `"BTC/USD"`, defaults the quote currency to USD when omitted, and translates the base currency to the CoinGecko coin id it expects.
+
+## Storage
+
+`ohlcv_lab.storage` stores candles in a SQLite database. `connect(path)` opens a connection to the database file and creates the `candles` table if it does not exist yet. `upsert_candles(connection, symbol, interval, candles)` inserts a list of candles, identifying each row by `(symbol, interval, timestamp)`. Fetching the same candle again updates the existing row in place instead of creating a duplicate.
 
 ## Exceptions
 
