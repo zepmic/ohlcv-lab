@@ -38,6 +38,33 @@ def connect(path: str) -> sqlite3.Connection:
     return connection
 
 
+SELECT_SQL = """
+SELECT timestamp, open, high, low, close, volume
+FROM candles
+WHERE symbol = ? AND interval = ? AND timestamp >= ? AND timestamp <= ?
+ORDER BY timestamp
+"""
+
+
+def fetch_candles(
+    connection: sqlite3.Connection,
+    symbol: str,
+    interval: str,
+    start_time: int = 0,
+    end_time: int = 2**63 - 1,
+) -> list[Candle]:
+    """Return the stored candles for a symbol and interval, ordered by timestamp.
+
+    `start_time` and `end_time` bound the timestamp range (inclusive) in
+    milliseconds since the epoch. Without them, all stored candles for the
+    symbol and interval are returned.
+    """
+    rows = connection.execute(
+        SELECT_SQL, (symbol, interval, start_time, end_time)
+    ).fetchall()
+    return [Candle(*row) for row in rows]
+
+
 def upsert_candles(
     connection: sqlite3.Connection,
     symbol: str,

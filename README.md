@@ -51,7 +51,7 @@ Binance caps a single response at 1000 candles, so a longer time range needs mor
 
 ## Storage
 
-`ohlcv_lab.storage` stores candles in a SQLite database. `connect(path)` opens a connection to the database file and creates the `candles` table if it does not exist yet. `upsert_candles(connection, symbol, interval, candles)` inserts a list of candles, identifying each row by `(symbol, interval, timestamp)`. Fetching the same candle again updates the existing row in place instead of creating a duplicate.
+`ohlcv_lab.storage` stores candles in a SQLite database. `connect(path)` opens a connection to the database file and creates the `candles` table if it does not exist yet. `upsert_candles(connection, symbol, interval, candles)` inserts a list of candles, identifying each row by `(symbol, interval, timestamp)`. Fetching the same candle again updates the existing row in place instead of creating a duplicate. `fetch_candles(connection, symbol, interval, start_time=0, end_time=...)` returns the stored candles for a symbol and interval, ordered by timestamp, optionally narrowed to a timestamp range in milliseconds since the epoch.
 
 ## Exceptions
 
