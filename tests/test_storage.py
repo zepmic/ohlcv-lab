@@ -1,5 +1,7 @@
 from ohlcv_lab.models import Candle
-from ohlcv_lab.storage import connect, fetch_candles, upsert_candles
+from ohlcv_lab.storage import connect, fetch_candles, find_gaps, upsert_candles
+
+ONE_HOUR_MS = 3_600_000
 
 
 def _select_all(connection):
@@ -112,3 +114,102 @@ def test_fetch_candles_returns_empty_list_when_nothing_stored(tmp_path):
     result = fetch_candles(connection, "BTC/USDT", "1h")
 
     assert result == []
+
+
+def _candle_at(timestamp):
+    return Candle(timestamp=timestamp, open=1.0, high=1.0, low=1.0, close=1.0, volume=0.0)
+
+
+def test_find_gaps_returns_empty_list_for_contiguous_candles(tmp_path):
+    connection = connect(str(tmp_path / "ohlcv.sqlite"))
+    candles = [_candle_at(1_700_000_000_000 + i * ONE_HOUR_MS) for i in range(3)]
+    upsert_candles(connection, "BTC/USDT", "1h", candles)
+
+    result = find_gaps(connection, "BTC/USDT", "1h", ONE_HOUR_MS)
+
+    assert result == []
+
+
+def test_find_gaps_detects_single_missing_candle(tmp_path):
+    connection = connect(str(tmp_path / "ohlcv.sqlite"))
+    candles = [_candle_at(1_700_000_000_000), _candle_at(1_700_000_000_000 + 2 * ONE_HOUR_MS)]
+    upsert_candles(connection, "BTC/USDT", "1h", candles)
+
+    result = find_gaps(connection, "BTC/USDT", "1h", ONE_HOUR_MS)
+
+    gap_start = 1_700_000_000_000 + ONE_HOUR_MS
+    assert result == [(gap_start, gap_start)]
+
+
+def test_find_gaps_detects_run_of_missing_candles(tmp_path):
+    connection = connect(str(tmp_path / "ohlcv.sqlite"))
+    candles = [_candle_at(1_700_000_000_000), _candle_at(1_700_000_000_000 + 4 * ONE_HOUR_MS)]
+    upsert_candles(connection, "BTC/USDT", "1h", candles)
+
+    result = find_gaps(connection, "BTC/USDT", "1h", ONE_HOUR_MS)
+
+    gap_start = 1_700_000_000_000 + ONE_HOUR_MS
+    gap_end = 1_700_000_000_000 + 3 * ONE_HOUR_MS
+    assert result == [(gap_start, gap_end)]
+
+
+def test_find_gaps_detects_multiple_gaps(tmp_path):
+    connection = connect(str(tmp_path / "ohlcv.sqlite"))
+    base = 1_700_000_000_000
+    candles = [
+        _candle_at(base),
+        _candle_at(base + 2 * ONE_HOUR_MS),
+        _candle_at(base + 3 * ONE_HOUR_MS),
+        _candle_at(base + 5 * ONE_HOUR_MS),
+    ]
+    upsert_candles(connection, "BTC/USDT", "1h", candles)
+
+    result = find_gaps(connection, "BTC/USDT", "1h", ONE_HOUR_MS)
+
+    assert result == [
+        (base + ONE_HOUR_MS, base + ONE_HOUR_MS),
+        (base + 4 * ONE_HOUR_MS, base + 4 * ONE_HOUR_MS),
+    ]
+
+
+def test_find_gaps_ignores_other_symbols_and_intervals(tmp_path):
+    connection = connect(str(tmp_path / "ohlcv.sqlite"))
+    base = 1_700_000_000_000
+    upsert_candles(connection, "BTC/USDT", "1h", [_candle_at(base), _candle_at(base + ONE_HOUR_MS)])
+    upsert_candles(connection, "BTC/USDT", "4h", [_candle_at(base), _candle_at(base + 8 * ONE_HOUR_MS)])
+
+    result = find_gaps(connection, "BTC/USDT", "1h", ONE_HOUR_MS)
+
+    assert result == []
+
+
+def test_find_gaps_returns_empty_list_for_fewer_than_two_candles(tmp_path):
+    connection = connect(str(tmp_path / "ohlcv.sqlite"))
+    upsert_candles(connection, "BTC/USDT", "1h", [_candle_at(1_700_000_000_000)])
+
+    result = find_gaps(connection, "BTC/USDT", "1h", ONE_HOUR_MS)
+
+    assert result == []
+
+
+def test_find_gaps_respects_time_range(tmp_path):
+    connection = connect(str(tmp_path / "ohlcv.sqlite"))
+    base = 1_700_000_000_000
+    candles = [
+        _candle_at(base),
+        _candle_at(base + 2 * ONE_HOUR_MS),
+        _candle_at(base + 5 * ONE_HOUR_MS),
+        _candle_at(base + 6 * ONE_HOUR_MS),
+    ]
+    upsert_candles(connection, "BTC/USDT", "1h", candles)
+
+    result = find_gaps(
+        connection,
+        "BTC/USDT",
+        "1h",
+        ONE_HOUR_MS,
+        start_time=base + 2 * ONE_HOUR_MS,
+        end_time=base + 6 * ONE_HOUR_MS,
+    )
+
+    assert result == [(base + 3 * ONE_HOUR_MS, base + 4 * ONE_HOUR_MS)]
