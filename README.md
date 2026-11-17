@@ -55,6 +55,10 @@ Binance caps a single response at 1000 candles, so a longer time range needs mor
 
 `find_gaps(connection, symbol, interval, interval_ms, start_time=0, end_time=...)` compares consecutive stored candles against the expected spacing `interval_ms` and returns a list of `(gap_start, gap_end)` timestamp pairs, each marking a run of one or more missing candles between two stored ones.
 
+## Incremental sync
+
+`ohlcv_lab.sync.sync_missing_candles(connection, symbol, interval, interval_ms, start_time, end_time, fetch_range)` reloads only the candles missing from storage for a time range, instead of re-fetching everything. It works out what's missing, a leading range before the first stored candle, the gaps `find_gaps` reports, and a trailing range after the last stored candle, then calls `fetch_range` once per missing range, for example `ohlcv_lab.binance.fetch_klines_range`. The fetched candles are stored and also returned; candles already in storage are left untouched.
+
 ## Exceptions
 
 `ohlcv_lab.exceptions` defines the custom exception types raised across the package. `OhlcvLabError` is the common base class. `InvalidCandleError` is raised by `Candle` for invalid data, `UnsupportedSymbolError` and `UnsupportedIntervalError` are raised by the Binance and CoinGecko clients for symbols or intervals they do not recognize, and `NoPriceDataError` is raised when a provider's response does not contain the requested price. Each of these also subclasses `ValueError`, so existing code that catches `ValueError` keeps working.
