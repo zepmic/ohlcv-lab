@@ -3,7 +3,7 @@ name = "ohlcv-lab"
 version = "0.0.1"
 description = "Crypto market data pipeline with indicators and a dashboard"
 requires-python = ">=3.11"
-dependencies = ["requests>=2.31"]
+dependencies = ["requests>=2.31", "pyarrow>=14"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8"]
