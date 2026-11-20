@@ -4,19 +4,21 @@ import sqlite3
 
 from ohlcv_lab.models import Candle
 
-CREATE_TABLE_SQL = """
-CREATE TABLE IF NOT EXISTS candles (
-    symbol TEXT NOT NULL,
-    interval TEXT NOT NULL,
-    timestamp INTEGER NOT NULL,
-    open REAL NOT NULL,
-    high REAL NOT NULL,
-    low REAL NOT NULL,
-    close REAL NOT NULL,
-    volume REAL NOT NULL,
-    PRIMARY KEY (symbol, interval, timestamp)
-)
-"""
+MIGRATIONS = [
+    """
+    CREATE TABLE IF NOT EXISTS candles (
+        symbol TEXT NOT NULL,
+        interval TEXT NOT NULL,
+        timestamp INTEGER NOT NULL,
+        open REAL NOT NULL,
+        high REAL NOT NULL,
+        low REAL NOT NULL,
+        close REAL NOT NULL,
+        volume REAL NOT NULL,
+        PRIMARY KEY (symbol, interval, timestamp)
+    )
+    """,
+]
 
 UPSERT_SQL = """
 INSERT INTO candles (symbol, interval, timestamp, open, high, low, close, volume)
@@ -30,11 +32,37 @@ ON CONFLICT (symbol, interval, timestamp) DO UPDATE SET
 """
 
 
-def connect(path: str) -> sqlite3.Connection:
-    """Open a connection to the candle database, creating the schema if needed."""
-    connection = sqlite3.connect(path)
-    connection.execute(CREATE_TABLE_SQL)
+def migrate(connection: sqlite3.Connection) -> None:
+    """Bring the database schema up to date by applying pending migrations.
+
+    Each entry in `MIGRATIONS` is a schema version, applied in order starting
+    right after the version already recorded in the `schema_version` table.
+    Running this on an up-to-date connection is a no-op.
+    """
+    connection.execute(
+        "CREATE TABLE IF NOT EXISTS schema_version (version INTEGER NOT NULL)"
+    )
+    row = connection.execute("SELECT version FROM schema_version").fetchone()
+    current_version = row[0] if row else 0
+
+    for statement in MIGRATIONS[current_version:]:
+        connection.execute(statement)
+
+    if row is None:
+        connection.execute(
+            "INSERT INTO schema_version (version) VALUES (?)", (len(MIGRATIONS),)
+        )
+    elif len(MIGRATIONS) != current_version:
+        connection.execute(
+            "UPDATE schema_version SET version = ?", (len(MIGRATIONS),)
+        )
     connection.commit()
+
+
+def connect(path: str) -> sqlite3.Connection:
+    """Open a connection to the candle database, applying pending migrations."""
+    connection = sqlite3.connect(path)
+    migrate(connection)
     return connection
 
 

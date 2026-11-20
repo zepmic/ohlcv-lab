@@ -51,9 +51,11 @@ Binance caps a single response at 1000 candles, so a longer time range needs mor
 
 ## Storage
 
-`ohlcv_lab.storage` stores candles in a SQLite database. `connect(path)` opens a connection to the database file and creates the `candles` table if it does not exist yet. `upsert_candles(connection, symbol, interval, candles)` inserts a list of candles, identifying each row by `(symbol, interval, timestamp)`. Fetching the same candle again updates the existing row in place instead of creating a duplicate. `fetch_candles(connection, symbol, interval, start_time=0, end_time=...)` returns the stored candles for a symbol and interval, ordered by timestamp, optionally narrowed to a timestamp range in milliseconds since the epoch.
+`ohlcv_lab.storage` stores candles in a SQLite database. `connect(path)` opens a connection to the database file and brings its schema up to date. `upsert_candles(connection, symbol, interval, candles)` inserts a list of candles, identifying each row by `(symbol, interval, timestamp)`. Fetching the same candle again updates the existing row in place instead of creating a duplicate. `fetch_candles(connection, symbol, interval, start_time=0, end_time=...)` returns the stored candles for a symbol and interval, ordered by timestamp, optionally narrowed to a timestamp range in milliseconds since the epoch.
 
 `find_gaps(connection, symbol, interval, interval_ms, start_time=0, end_time=...)` compares consecutive stored candles against the expected spacing `interval_ms` and returns a list of `(gap_start, gap_end)` timestamp pairs, each marking a run of one or more missing candles between two stored ones.
+
+Schema changes are tracked as a list of migrations in `MIGRATIONS`, each one the SQL for a single schema version. `connect(path)` applies any migrations after the version recorded in a `schema_version` table, so an existing database is brought up to date instead of rebuilt. `migrate(connection)` does this directly on an open connection and is a no-op if the schema is already current.
 
 ## Incremental sync
 

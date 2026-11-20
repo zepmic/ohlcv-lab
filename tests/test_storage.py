@@ -1,5 +1,5 @@
 from ohlcv_lab.models import Candle
-from ohlcv_lab.storage import connect, fetch_candles, find_gaps, upsert_candles
+from ohlcv_lab.storage import MIGRATIONS, connect, fetch_candles, find_gaps, migrate, upsert_candles
 
 ONE_HOUR_MS = 3_600_000
 
@@ -17,6 +17,40 @@ def test_connect_creates_schema(tmp_path):
     tables = connection.execute(
         "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'candles'"
     ).fetchall()
+    assert tables == [("candles",)]
+
+
+def test_connect_records_current_schema_version(tmp_path):
+    connection = connect(str(tmp_path / "ohlcv.sqlite"))
+
+    version = connection.execute("SELECT version FROM schema_version").fetchone()
+
+    assert version == (len(MIGRATIONS),)
+
+
+def test_migrate_is_idempotent(tmp_path):
+    connection = connect(str(tmp_path / "ohlcv.sqlite"))
+
+    migrate(connection)
+    migrate(connection)
+
+    rows = connection.execute("SELECT version FROM schema_version").fetchall()
+    assert rows == [(len(MIGRATIONS),)]
+
+
+def test_migrate_applies_only_pending_migrations(tmp_path):
+    connection = connect(str(tmp_path / "ohlcv.sqlite"))
+    connection.execute("UPDATE schema_version SET version = 0")
+    connection.execute("DROP TABLE candles")
+    connection.commit()
+
+    migrate(connection)
+
+    version = connection.execute("SELECT version FROM schema_version").fetchone()
+    tables = connection.execute(
+        "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'candles'"
+    ).fetchall()
+    assert version == (len(MIGRATIONS),)
     assert tables == [("candles",)]
 
 
