@@ -65,6 +65,10 @@ Schema changes are tracked as a list of migrations in `MIGRATIONS`, each one the
 
 `ohlcv_lab.export` writes a list of candles to a file. `export_candles_to_csv(candles, path)` writes them to a CSV file with a header row (`timestamp, open, high, low, close, volume`). `export_candles_to_parquet(candles, path)` writes them to a Parquet file with the same columns.
 
+## Indicators
+
+`ohlcv_lab.indicators` computes moving averages from a list of candles. `sma(candles, period)` and `ema(candles, period)` each return a list of the same length as `candles`, one value per candle in the same order. The first `period - 1` entries are `None` because there are not yet enough candles to average. `ema` seeds its first value with the simple moving average of the first `period` closes and then smooths each later close with the standard factor `2 / (period + 1)`.
+
 ## Exceptions
 
 `ohlcv_lab.exceptions` defines the custom exception types raised across the package. `OhlcvLabError` is the common base class. `InvalidCandleError` is raised by `Candle` for invalid data, `UnsupportedSymbolError` and `UnsupportedIntervalError` are raised by the Binance and CoinGecko clients for symbols or intervals they do not recognize, and `NoPriceDataError` is raised when a provider's response does not contain the requested price. Each of these also subclasses `ValueError`, so existing code that catches `ValueError` keeps working.
