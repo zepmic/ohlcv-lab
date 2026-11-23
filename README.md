@@ -67,7 +67,9 @@ Schema changes are tracked as a list of migrations in `MIGRATIONS`, each one the
 
 ## Indicators
 
-`ohlcv_lab.indicators` computes moving averages from a list of candles. `sma(candles, period)` and `ema(candles, period)` each return a list of the same length as `candles`, one value per candle in the same order. The first `period - 1` entries are `None` because there are not yet enough candles to average. `ema` seeds its first value with the simple moving average of the first `period` closes and then smooths each later close with the standard factor `2 / (period + 1)`.
+`ohlcv_lab.indicators` computes indicators from a list of candles. `sma(candles, period)` and `ema(candles, period)` each return a list of the same length as `candles`, one value per candle in the same order. The first `period - 1` entries are `None` because there are not yet enough candles to average. `ema` seeds its first value with the simple moving average of the first `period` closes and then smooths each later close with the standard factor `2 / (period + 1)`.
+
+`rsi(candles, period)` computes the relative strength index of closing prices using Wilder's smoothing method. It returns a list of the same length as `candles`; the first `period` entries are `None` because at least `period` price changes are needed to seed the average gain and loss, after which each value is smoothed with the next price change.
 
 ## Exceptions
 
