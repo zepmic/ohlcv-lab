@@ -24,3 +24,7 @@ class UnsupportedIntervalError(OhlcvLabError, ValueError):
 
 class NoPriceDataError(OhlcvLabError, ValueError):
     """Raised when a provider's response does not contain price data for a symbol."""
+
+
+class InvalidRiskInputError(OhlcvLabError, ValueError):
+    """Raised when reserve, position or rate model values are inconsistent."""
